@@ -13,23 +13,25 @@ import (
 )
 
 type NowPlayingResponse struct {
-	Title     string `json:"title"`
-	Artist    string `json:"artist"`
-	Album     string `json:"album"`
-	Url       string `json:"url"`
-	IsPlaying bool   `json:"isPlaying"`
+	Title         string `json:"title"`
+	Artist        string `json:"artist"`
+	Album         string `json:"album"`
+	Url           string `json:"url"`
+	IsPlaying     bool   `json:"isPlaying"`
+	AlbumCoverURL string `json:"albumCoverURL"`
 }
 
 func nowPlayingHandler(w http.ResponseWriter, r *http.Request) {
 
-	isPlaying, title, artist, album, url, _ := get_spotify_np()
+	isPlaying, title, artist, album, url, _, albumCoverURL := getSpotifyNP()
 
 	response := NowPlayingResponse{
-		Title:     title,
-		Artist:    artist,
-		Album:     album,
-		Url:       url,
-		IsPlaying: isPlaying,
+		Title:         title,
+		Artist:        artist,
+		Album:         album,
+		Url:           url,
+		IsPlaying:     isPlaying,
+		AlbumCoverURL: albumCoverURL,
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
@@ -83,13 +85,14 @@ func sendNowPlayingUpdatesToWebSocket() {
 
 			return
 		default:
-			isPlaying, title, artist, album, url, _ := get_spotify_np()
+			isPlaying, title, artist, album, url, _, albumCoverURL := getSpotifyNP()
 			response := NowPlayingResponse{
-				Title:     title,
-				Artist:    artist,
-				Album:     album,
-				Url:       url,
-				IsPlaying: isPlaying,
+				Title:         title,
+				Artist:        artist,
+				Album:         album,
+				Url:           url,
+				IsPlaying:     isPlaying,
+				AlbumCoverURL: albumCoverURL,
 			}
 
 			broadcast <- response

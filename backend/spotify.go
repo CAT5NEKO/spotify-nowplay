@@ -133,7 +133,7 @@ func isNil(i interface{}) bool {
 	return false
 }
 
-func get_spotify_np() (is_playing bool, title string, artist string, album string, url string, progress float64) {
+func getSpotifyNP() (isPlaying bool, title string, artist string, album string, url string, progress float64, albumCoverURL string) {
 	req, err := http.NewRequest(http.MethodGet, "https://api.spotify.com/v1/me/player/currently-playing", nil)
 	if err != nil {
 		log.Fatalf("HTTPリクエストの作成に失敗しました。: %s", err)
@@ -149,50 +149,83 @@ func get_spotify_np() (is_playing bool, title string, artist string, album strin
 	body, _ := io.ReadAll(resp.Body)
 
 	if len(body) == 0 {
-		log.Println("Empty response from Spotify API")
-		return false, "", "", "", "", 0
+		log.Println("Spotify APIからの空の応答")
+		return false, "", "", "", "", 0, ""
 	}
 
 	if resp.StatusCode == http.StatusUnauthorized {
-		fmt.Println("Error: オーソライズに失敗しています。`SPOTIFY_REFRESH_TOKEN` を確認してください。")
+		fmt.Println("エラー: 認証に失敗しました。`SPOTIFY_REFRESH_TOKEN` を確認してください。")
 	}
 
-	var jsonObj interface{}
+	var jsonObj map[string]interface{}
 	if err := json.Unmarshal(body, &jsonObj); err != nil {
-
 		fmt.Println(string(body))
-		log.Fatalf("JSON unmarshal で問題が生じました。: %s\nResponse body: %s", err, string(body))
+		log.Fatalf("JSONアンマーシャルで問題が発生しました。: %s\nResponse body: %s", err, string(body))
 	}
 
-	if isNil(jsonObj) || isNil(jsonObj.(map[string]interface{})["is_playing"]) {
-
+	if isNil(jsonObj) || isNil(jsonObj["is_playing"]) {
 		fmt.Println(string(body))
-		log.Println("エラーが発生しました。Spotify が再生中でない可能性があります。")
-		return false, "", "", "", "", 0
+		log.Println("エラーが発生しました。Spotifyが再生中でない可能性があります。")
+		return false, "", "", "", "", 0, ""
 	}
 
-	is_playing = jsonObj.(map[string]interface{})["is_playing"].(bool)
+	isPlaying = jsonObj["is_playing"].(bool)
 
-	if is_playing {
-		title = jsonObj.(map[string]interface{})["item"].(map[string]interface{})["name"].(string)
+	if isPlaying {
+		title = jsonObj["item"].(map[string]interface{})["name"].(string)
 
-		artists := jsonObj.(map[string]interface{})["item"].(map[string]interface{})["artists"].([]interface{})
+		artists := jsonObj["item"].(map[string]interface{})["artists"].([]interface{})
 		artistList := make([]string, len(artists))
 		for i, artist := range artists {
 			artistList[i] = artist.(map[string]interface{})["name"].(string)
 		}
 		artist = strings.Join(artistList, ", ")
 
-		album = jsonObj.(map[string]interface{})["item"].(map[string]interface{})["album"].(map[string]interface{})["name"].(string)
+		album = jsonObj["item"].(map[string]interface{})["album"].(map[string]interface{})["name"].(string)
 
-		url = jsonObj.(map[string]interface{})["item"].(map[string]interface{})["external_urls"].(map[string]interface{})["spotify"].(string)
+		url = jsonObj["item"].(map[string]interface{})["external_urls"].(map[string]interface{})["spotify"].(string)
 
-		progress = jsonObj.(map[string]interface{})["progress_ms"].(float64)
+		progress = jsonObj["progress_ms"].(float64)
+
+		albumID := jsonObj["item"].(map[string]interface{})["album"].(map[string]interface{})["id"].(string)
+		albumCoverURL = getAlbumCoverURL(albumID)
 	} else {
-		is_playing = false
+		isPlaying = false
 
 		title, artist, album = "", "", ""
 	}
 
-	return is_playing, title, artist, album, url, progress
+	return isPlaying, title, artist, album, url, progress, albumCoverURL
+}
+
+func getAlbumCoverURL(albumID string) string {
+	albumURL := fmt.Sprintf("https://api.spotify.com/v1/albums/%s", albumID)
+	req, err := http.NewRequest(http.MethodGet, albumURL, nil)
+	if err != nil {
+		log.Fatalf("アルバム詳細のHTTPリクエストの作成に失敗しました: %s", err)
+	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", get_spotify_access_token()))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalf("アルバム詳細のHTTPリクエストで問題が発生しました: %s", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("アルバム詳細のレスポンスボディの読み取りに失敗しました: %s", err)
+	}
+
+	var albumObj map[string]interface{}
+	if err := json.Unmarshal(body, &albumObj); err != nil {
+		log.Fatalf("アルバム詳細のJSONアンマーシャルで問題が発生しました: %s\nレスポンスボディ: %s", err, string(body))
+	}
+
+	images := albumObj["images"].([]interface{})
+	if len(images) > 0 {
+		return images[0].(map[string]interface{})["url"].(string)
+	}
+
+	return ""
 }

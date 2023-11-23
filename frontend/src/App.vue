@@ -10,6 +10,13 @@
         <p>Artist: {{ nowPlaying.artist }}</p>
         <p>Album: {{ nowPlaying.album }}</p>
         <p>
+          <img
+              :src="nowPlaying.albumCoverURL"
+              alt="Album Cover"
+              style="max-width: 200px; max-height: 200px;"
+          />
+        </p>
+        <p>
           Listen on Spotify:
           <a :href="nowPlaying.url" target="_blank" rel="noopener noreferrer">
             {{ nowPlaying.url }}
