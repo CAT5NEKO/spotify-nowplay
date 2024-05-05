@@ -15,7 +15,8 @@ Please set the redirect URL to `http://localhost4400`. There is no problem in fi
 
 I'm currently learning Go and Vue, so I think there are a lot of flaws. I'd be very thanksful if the developers could give me any corrections or advice.😊
 
-![1](https://github.com/CAT5NEKO/spotify-github-profile/assets/111590457/5e4c79ca-97dc-4d89-a04d-242fbe581373)
+![artworks](https://github.com/CAT5NEKO/spotify-nowplay-profile/assets/111590457/ff24d97e-e50b-46da-abf9-32bf7f48442d)
+
 
 ## Change log
 2024/05/05
