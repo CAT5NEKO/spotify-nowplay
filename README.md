@@ -16,3 +16,12 @@ Please set the redirect URL to `http://localhost4400`. There is no problem in fi
 I'm currently learning Go and Vue, so I think there are a lot of flaws. I'd be very thanksful if the developers could give me any corrections or advice.😊
 
 ![1](https://github.com/CAT5NEKO/spotify-github-profile/assets/111590457/5e4c79ca-97dc-4d89-a04d-242fbe581373)
+
+## Change log
+2024/05/05
+カードの見た目をスリムにしました。
+異常終了しないようにしました。
+
+やりたいこと
+- やっぱりSpotifyに埋め込めるようにしたい
+- CloudFlareTunnnel経由で公開できるようにしたい（vue.config.jsを弄ればどうにかなるのかな？）

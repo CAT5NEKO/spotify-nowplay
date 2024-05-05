@@ -4,7 +4,6 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/joho/godotenv"
 )
 
 func spotify_login(w http.ResponseWriter, req *http.Request) {
@@ -50,37 +51,37 @@ func save_refresh_token(auth_code string) {
 	values.Set("redirect_uri", "http://localhost:4400/callback")
 	req, err := http.NewRequest(http.MethodPost, "https://accounts.spotify.com/api/token", strings.NewReader(values.Encode()))
 	if err != nil {
-		log.Fatalf("POSTリクエストの送信に失敗しました。: %s", err)
+		log.Println("POSTリクエストの送信に失敗しました。: %s", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", b64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", os.Getenv("SPOTIFY_CLIENT_ID"), os.Getenv("SPOTIFY_CLIENT_SECRET"))))))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatalf("トークン変換リクエストに失敗しました。: %s", err)
+		log.Println("トークン変換リクエストに失敗しました。: %s", err)
 	}
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("レスポンスボディの読み取りに失敗しました。: %s", err)
+		log.Println("レスポンスボディの読み取りに失敗しました。: %s", err)
 	}
 
 	var jsonObj interface{}
 	if err := json.Unmarshal(body, &jsonObj); err != nil {
 		fmt.Println(string(body))
-		log.Fatalf("JSONボディにパースする所で問題が発生しました。: %s\nResponse body: %s", err, string(body))
+		log.Println("JSONボディにパースする所で問題が発生しました。: %s\nResponse body: %s", err, string(body))
 	}
 
 	refresh_token := jsonObj.(map[string]interface{})["refresh_token"].(string)
 	refresh_token_env, err := godotenv.Unmarshal(fmt.Sprintf("SPOTIFY_CLIENT_ID=%s\nSPOTIFY_CLIENT_SECRET=%s\nSPOTIFY_REFRESH_TOKEN=%s\n", os.Getenv("SPOTIFY_CLIENT_ID"), os.Getenv("SPOTIFY_CLIENT_SECRET"), refresh_token))
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	err = godotenv.Write(refresh_token_env, "./.env")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	os.Exit(0)
@@ -93,7 +94,7 @@ func get_spotify_access_token() string {
 
 	req, err := http.NewRequest(http.MethodPost, "https://accounts.spotify.com/api/token", strings.NewReader(values.Encode()))
 	if err != nil {
-		log.Fatalf("POSTリクエストが送信できませんでした。: %s", err)
+		log.Println("POSTリクエストが送信できませんでした。: %s", err)
 	}
 
 	spotify_auth_string := b64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", os.Getenv("SPOTIFY_CLIENT_ID"), os.Getenv("SPOTIFY_CLIENT_SECRET"))))
@@ -102,7 +103,7 @@ func get_spotify_access_token() string {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	defer resp.Body.Close()
 
@@ -111,7 +112,7 @@ func get_spotify_access_token() string {
 	var jsonObj interface{}
 	if err := json.Unmarshal(body, &jsonObj); err != nil {
 		fmt.Println(string(body))
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	if isNil(jsonObj.(map[string]interface{})["access_token"]) {
@@ -136,13 +137,13 @@ func isNil(i interface{}) bool {
 func getSpotifyNP() (isPlaying bool, title string, artist string, album string, url string, progress float64, albumCoverURL string) {
 	req, err := http.NewRequest(http.MethodGet, "https://api.spotify.com/v1/me/player/currently-playing", nil)
 	if err != nil {
-		log.Fatalf("HTTPリクエストの作成に失敗しました。: %s", err)
+		log.Println("HTTPリクエストの作成に失敗しました。: %s", err)
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", get_spotify_access_token()))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatalf("HTTPリクエストで問題が発生しました。: %s", err)
+		log.Println("HTTPリクエストで問題が発生しました。: %s", err)
 	}
 	defer resp.Body.Close()
 
@@ -160,7 +161,7 @@ func getSpotifyNP() (isPlaying bool, title string, artist string, album string, 
 	var jsonObj map[string]interface{}
 	if err := json.Unmarshal(body, &jsonObj); err != nil {
 		fmt.Println(string(body))
-		log.Fatalf("JSONアンマーシャルで問題が発生しました。: %s\nResponse body: %s", err, string(body))
+		log.Println("JSONアンマーシャルで問題が発生しました。: %s\nResponse body: %s", err, string(body))
 	}
 
 	if isNil(jsonObj) || isNil(jsonObj["is_playing"]) {
@@ -202,24 +203,24 @@ func getAlbumCoverURL(albumID string) string {
 	albumURL := fmt.Sprintf("https://api.spotify.com/v1/albums/%s", albumID)
 	req, err := http.NewRequest(http.MethodGet, albumURL, nil)
 	if err != nil {
-		log.Fatalf("アルバム詳細のHTTPリクエストの作成に失敗しました: %s", err)
+		log.Println("アルバム詳細のHTTPリクエストの作成に失敗しました: %s", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", get_spotify_access_token()))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatalf("アルバム詳細のHTTPリクエストで問題が発生しました: %s", err)
+		log.Println("アルバム詳細のHTTPリクエストで問題が発生しました: %s", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("アルバム詳細のレスポンスボディの読み取りに失敗しました: %s", err)
+		log.Println("アルバム詳細のレスポンスボディの読み取りに失敗しました: %s", err)
 	}
 
 	var albumObj map[string]interface{}
 	if err := json.Unmarshal(body, &albumObj); err != nil {
-		log.Fatalf("アルバム詳細のJSONアンマーシャルで問題が発生しました: %s\nレスポンスボディ: %s", err, string(body))
+		log.Println("アルバム詳細のJSONアンマーシャルで問題が発生しました: %s\nレスポンスボディ: %s", err, string(body))
 	}
 
 	images := albumObj["images"].([]interface{})
