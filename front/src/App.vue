@@ -14,7 +14,7 @@
         <p class="album">{{ nowPlaying.album }}</p>
         <p class="listen">
           <a :href="nowPlaying.url" target="_blank" rel="noopener noreferrer">
-            Listen on Spotify
+            ワイもSpotifyで聞くで
           </a>
         </p>
       </div>
@@ -64,35 +64,49 @@ export default {
 </script>
 
 <style scoped>
+
 .profile-card {
-  max-width: 300px;
+  max-width: 900px;
   margin: auto;
-  padding: 20px;
-  background-color: #f9f9f9;
+  padding: 40px;
+  background-color: #383737;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
   font-family: "Arial", sans-serif;
   text-align: center;
 }
 
 h2 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
+  font-size: 3.2rem;
+  text-align: left;
+  margin-bottom: 60px;
+  color: antiquewhite;
+  font-family: "Arial",serif;
 }
 
 .song-info {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  font-family: "Arial", sans-serif;
+  gap: 60px;
 }
 
 .album-cover {
-  width: 100px;
-  height: 100px;
+  width: 300px;
+  height: 300px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  animation: spin 10s linear infinite;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .details {
@@ -100,21 +114,122 @@ h2 {
 }
 
 .title {
-  font-size: 1.2rem;
+  font-size: 3.1rem;
   font-weight: bold;
+  color: antiquewhite;
+  font-family: "Arial", sans-serif;
 }
 
 .artist, .album {
-  font-size: 1rem;
-  color: #777;
+  font-size: 2rem;
+  color: #dcd8d8;
+  font-family: "Arial", sans-serif;
 }
 
 .listen {
-  margin-top: 10px;
+  margin-top: 30px;
 }
 
 a {
-  color: #3498db;
+  font-size: 1rem;
+  color: #45db34;
   text-decoration: none;
+  font-family: "Arial", sans-serif;
+}
+
+@media (max-width: 1200px) {
+  .profile-card {
+    max-width: 750px;
+    padding: 50px;
+  }
+  h2 {
+    font-size: 3.5rem;
+    margin-bottom: 50px;
+  }
+  .album-cover {
+    width: 250px;
+    height: 250px;
+  }
+  .title {
+    font-size: 3rem;
+  }
+  .artist, .album {
+    font-size: 2.5rem;
+  }
+  .listen a {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .profile-card {
+    max-width: 650px;
+    padding: 40px;
+  }
+  h2 {
+    font-size: 3rem;
+    margin-bottom: 40px;
+  }
+  .album-cover {
+    width: 200px;
+    height: 200px;
+  }
+  .title {
+    font-size: 2.5rem;
+  }
+  .artist, .album {
+    font-size: 2rem;
+  }
+  .listen a {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-card {
+    max-width: 500px;
+    padding: 30px;
+  }
+  h2 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+  }
+  .album-cover {
+    width: 150px;
+    height: 150px;
+  }
+  .title {
+    font-size: 2rem;
+  }
+  .artist, .album {
+    font-size: 1.8rem;
+  }
+  .listen a {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .profile-card {
+    max-width: 90%;
+    padding: 20px;
+  }
+  h2 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+  .album-cover {
+    width: 120px;
+    height: 120px;
+  }
+  .title {
+    font-size: 0.9rem;
+  }
+  .artist, .album {
+    font-size: 0.7rem;
+  }
+  .listen a {
+    font-size: 0.5rem;
+  }
 }
 </style>
