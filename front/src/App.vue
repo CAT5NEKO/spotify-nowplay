@@ -40,7 +40,7 @@ export default {
     };
   },
   mounted() {
-    this.socket = new WebSocket('ws://localhost:4400/ws');
+    this.socket = new WebSocket('ws://48.216.216.143:4400/ws');
 
     this.socket.addEventListener('open', (event) => {
       console.log('WebSocket connection opened:', event);

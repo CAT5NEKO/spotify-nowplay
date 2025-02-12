@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/joho/godotenv"
 )
 
 type NowPlayingResponse struct {
@@ -129,7 +130,7 @@ func main() {
 		values := url.Values{}
 		values.Add("client_id", os.Getenv("SPOTIFY_CLIENT_ID"))
 		values.Add("response_type", "code")
-		values.Add("redirect_uri", "http://localhost:4400/callback")
+		values.Add("redirect_uri", "http://127.0.0.1:4400/callback")
 		values.Add("scope", "user-read-playback-state user-read-currently-playing")
 		fmt.Println("https://accounts.spotify.com/authorize?" + values.Encode())
 
