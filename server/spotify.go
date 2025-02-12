@@ -19,7 +19,7 @@ func spotify_login(w http.ResponseWriter, req *http.Request) {
 	values := url.Values{}
 	values.Add("client_id", os.Getenv("SPOTIFY_CLIENT_ID"))
 	values.Add("response_type", "code")
-	values.Add("redirect_uri", "http://localhost:4400/callback")
+	values.Add("redirect_uri", "http://127.0.0.1:4400/callback")
 	values.Add("scope", "user-read-playback-state user-read-currently-playing")
 
 	http.Redirect(w, req, "https://accounts.spotify.com/authorize?"+values.Encode(), http.StatusFound)
@@ -48,7 +48,7 @@ func save_refresh_token(auth_code string) {
 	values.Set("grant_type", "authorization_code")
 	values.Set("code", auth_code)
 
-	values.Set("redirect_uri", "http://localhost:4400/callback")
+	values.Set("redirect_uri", "http://127.0.0.1:4400/callback")
 	req, err := http.NewRequest(http.MethodPost, "https://accounts.spotify.com/api/token", strings.NewReader(values.Encode()))
 	if err != nil {
 		log.Println("POSTリクエストの送信に失敗しました。: %s", err)
