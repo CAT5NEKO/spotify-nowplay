@@ -37,31 +37,72 @@ export default {
         isPlaying: false,
       },
       socket: null,
+      reconnectAttempts: 0,
+      maxReconnectAttempts: 5,
     };
   },
   mounted() {
-    this.socket = new WebSocket('ws://localhost:4400/ws');
-
-    this.socket.addEventListener('open', (event) => {
-      console.log('WebSocket connection opened:', event);
-    });
-
-    this.socket.addEventListener('message', (event) => {
-      const data = JSON.parse(event.data);
-      this.nowPlaying = data;
-    });
-
-    this.socket.addEventListener('close', (event) => {
-      console.log('WebSocket connection closed:', event);
-    });
+    this.createWebSocket();
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
   },
   beforeUnmount() {
     if (this.socket) {
       this.socket.close();
     }
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   },
+  methods: {
+    createWebSocket() {
+      this.socket = new WebSocket('ws://localhost:4400/ws');
+
+      this.socket.addEventListener('open', (event) => {
+        console.log('WebSocket connection opened:', event);
+        this.reconnectAttempts = 0;
+      });
+
+      this.socket.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data);
+        this.nowPlaying = data;
+      });
+
+      this.socket.addEventListener('close', (event) => {
+        console.log('WebSocket connection closed:', event);
+        this.handleSocketClose();
+      });
+
+      this.socket.addEventListener('error', (event) => {
+        console.error('WebSocket error:', event);
+        this.handleSocketClose();
+      });
+    },
+
+    handleSocketClose() {
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnectAttempts++;
+        console.log(`Attempting to reconnect... (${this.reconnectAttempts})`);
+        setTimeout(() => {
+          this.createWebSocket();
+        }, 1000);
+      } else {
+        console.log('Max reconnect attempts reached.');
+      }
+    },
+
+    handleVisibilityChange() {
+      if (document.hidden) {
+        if (this.socket) {
+          this.socket.close();
+        }
+      } else {
+        if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
+          this.createWebSocket();
+        }
+      }
+    }
+  }
 };
 </script>
+
 
 <style scoped>
 
