@@ -1,9 +1,9 @@
 
 ![image](https://github.com/user-attachments/assets/c72dfa94-1d43-40ab-8721-f8c8b8de49b7)
 
-# spotify-nowplay-profile
+# spotify-nowplay
 
-Spotifyで再生中の曲を取得してプロフィールに表示するためのツールです。
+Spotifyで再生中の曲をWebページで公開するツールです。
 
 ## 使い方
 
