@@ -1,32 +1,20 @@
 <template>
   <div class="profile-card">
     <h2>Now Playing</h2>
-
-    <div v-if="nowPlaying.isPlaying" class="song-info">
-      <img
-          :src="nowPlaying.albumCoverURL"
-          alt="Album Cover"
-          class="album-cover"
-      />
-      <div class="details">
-        <p class="title">{{ nowPlaying.title }}</p>
-        <p class="artist">{{ nowPlaying.artist }}</p>
-        <p class="album">{{ nowPlaying.album }}</p>
-        <p class="listen">
-          <a :href="nowPlaying.url" target="_blank" rel="noopener noreferrer">
-            ワイもSpotifyで聞くで
-          </a>
-        </p>
-      </div>
-    </div>
+    <TrackCard v-if="nowPlaying.isPlaying" :track="nowPlaying" />
     <div v-else>
       <p>No music is currently playing.</p>
     </div>
+    <HistoryList :history="history" />
   </div>
 </template>
 
 <script>
+import TrackCard from './components/TrackCard.vue';
+import HistoryList from './components/HistoryList.vue';
+
 export default {
+  components: { TrackCard, HistoryList },
   data() {
     return {
       nowPlaying: {
@@ -34,52 +22,77 @@ export default {
         artist: '',
         album: '',
         url: '',
+        albumCoverURL: '',
         isPlaying: false,
+        timestamp: 0,
       },
+      lastPlayed: null,
+      history: [],
       socket: null,
       reconnectAttempts: 0,
       maxReconnectAttempts: 5,
     };
   },
+
   mounted() {
     this.createWebSocket();
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    this.history = [];
   },
+
   beforeUnmount() {
     if (this.socket) {
       this.socket.close();
     }
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   },
+
   methods: {
     createWebSocket() {
       this.socket = new WebSocket('ws://localhost:4400/ws');
 
-      this.socket.addEventListener('open', (event) => {
-        console.log('WebSocket connection opened:', event);
+      this.socket.addEventListener('open', () => {
+        console.log('WebSocket connection opened');
         this.reconnectAttempts = 0;
       });
 
       this.socket.addEventListener('message', (event) => {
-        const data = JSON.parse(event.data);
-        this.nowPlaying = data;
+        try {
+          const data = JSON.parse(event.data);
+          this.nowPlaying = data;
+
+          if (data.isPlaying) {
+            this.addToHistory(data);
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+        }
       });
 
-      this.socket.addEventListener('close', (event) => {
-        console.log('WebSocket connection closed:', event);
+      this.socket.addEventListener('close', () => {
         this.handleSocketClose();
       });
 
-      this.socket.addEventListener('error', (event) => {
-        console.error('WebSocket error:', event);
+      this.socket.addEventListener('error', () => {
         this.handleSocketClose();
       });
+    },
+
+    addToHistory(track) {
+      const isDuplicate = this.history.some(item => item.title === track.title && item.artist === track.artist);
+
+      if (!isDuplicate) {
+        this.history.unshift({ ...track, timestamp: Date.now() });
+        if (this.history.length > 5) {
+          this.history.pop();
+        }
+      }
     },
 
     handleSocketClose() {
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         this.reconnectAttempts++;
-        console.log(`Attempting to reconnect... (${this.reconnectAttempts})`);
+        console.log(`Reconnecting... (${this.reconnectAttempts})`);
         setTimeout(() => {
           this.createWebSocket();
         }, 1000);
@@ -89,23 +102,17 @@ export default {
     },
 
     handleVisibilityChange() {
-      if (document.hidden) {
-        if (this.socket) {
-          this.socket.close();
-        }
-      } else {
-        if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
-          this.createWebSocket();
-        }
+      if (document.hidden && this.socket) {
+        this.socket.close();
+      } else if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
+        this.createWebSocket();
       }
-    }
+    },
   }
 };
 </script>
 
-
 <style scoped>
-
 .profile-card {
   max-width: 900px;
   margin: auto;
@@ -122,25 +129,8 @@ h2 {
   text-align: left;
   margin-bottom: 60px;
   color: antiquewhite;
-  font-family: "Arial",serif;
 }
 
-.song-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: "Arial", sans-serif;
-  gap: 60px;
-}
-
-.album-cover {
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  animation: spin 10s linear infinite;
-}
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -150,127 +140,16 @@ h2 {
   }
 }
 
-.details {
-  text-align: left;
-}
-
-.title {
-  font-size: 3.1rem;
-  font-weight: bold;
-  color: antiquewhite;
-  font-family: "Arial", sans-serif;
-}
-
-.artist, .album {
-  font-size: 2rem;
-  color: #dcd8d8;
-  font-family: "Arial", sans-serif;
-}
-
-.listen {
-  margin-top: 30px;
-}
-
 a {
   font-size: 1rem;
   color: #45db34;
   text-decoration: none;
-  font-family: "Arial", sans-serif;
 }
 
-@media (max-width: 1200px) {
-  .profile-card {
-    max-width: 750px;
-    padding: 50px;
-  }
-  h2 {
-    font-size: 3.5rem;
-    margin-bottom: 50px;
-  }
-  .album-cover {
-    width: 250px;
-    height: 250px;
-  }
-  .title {
-    font-size: 3rem;
-  }
-  .artist, .album {
-    font-size: 2.5rem;
-  }
-  .listen a {
-    font-size: 2.5rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .profile-card {
-    max-width: 650px;
-    padding: 40px;
-  }
-  h2 {
-    font-size: 3rem;
-    margin-bottom: 40px;
-  }
-  .album-cover {
-    width: 200px;
-    height: 200px;
-  }
-  .title {
-    font-size: 2.5rem;
-  }
-  .artist, .album {
-    font-size: 2rem;
-  }
-  .listen a {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .profile-card {
-    max-width: 500px;
-    padding: 30px;
-  }
+@media (max-width: 768px) {
   h2 {
     font-size: 2.5rem;
-    margin-bottom: 30px;
-  }
-  .album-cover {
-    width: 150px;
-    height: 150px;
-  }
-  .title {
-    font-size: 2rem;
-  }
-  .artist, .album {
-    font-size: 1.8rem;
-  }
-  .listen a {
-    font-size: 1.8rem;
-  }
-}
-
-@media (max-width: 400px) {
-  .profile-card {
-    max-width: 90%;
-    padding: 20px;
-  }
-  h2 {
-    font-size: 1.2rem;
-    margin-bottom: 20px;
-  }
-  .album-cover {
-    width: 120px;
-    height: 120px;
-  }
-  .title {
-    font-size: 0.9rem;
-  }
-  .artist, .album {
-    font-size: 0.7rem;
-  }
-  .listen a {
-    font-size: 0.5rem;
+    text-align: center;
   }
 }
 </style>
