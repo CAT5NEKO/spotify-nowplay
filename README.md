@@ -1,5 +1,6 @@
 
-![image](https://github.com/user-attachments/assets/c72dfa94-1d43-40ab-8721-f8c8b8de49b7)
+![](https://github.com/user-attachments/assets/fa760599-4a20-4ea4-a6d2-84a74a6c0952)
+
 
 # spotify-nowplay
 
